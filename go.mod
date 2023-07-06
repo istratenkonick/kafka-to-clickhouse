@@ -1,4 +1,4 @@
-module miniOPcore
+module k2c
 
 go 1.20
 
