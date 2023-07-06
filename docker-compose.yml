@@ -1,0 +1,41 @@
+version: '3'
+services:
+  one.node:
+    image: confluentinc/cp-kafka
+    container_name: one.node
+    hostname: one.node
+    ports:
+      - "9092:9092"
+    volumes:
+      - "./one.node:/tmp"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT'
+      KAFKA_LISTENERS: 'INTERNAL://:9092,CONTROLLER://:29092'
+      KAFKA_ADVERTISED_LISTENERS: 'INTERNAL://one.node:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@one.node:29092'
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      CLUSTER_ID: 'ciWo7IWazngRchmPES6q5A=='
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+    networks:
+      network:
+        ipv4_address: 111.64.3.200
+
+
+  clickhouse:
+    image: yandex/clickhouse-server
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - ./clickhouse:/var/lib/clickhouse
+
+networks:
+  network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 111.64.3.0/24
+          gateway: 111.64.3.1
