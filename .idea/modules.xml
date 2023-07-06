@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/miniOPcore.iml" filepath="$PROJECT_DIR$/.idea/miniOPcore.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/kafka-to-clickhouse.iml" filepath="$PROJECT_DIR$/.idea/kafka-to-clickhouse.iml" />
     </modules>
   </component>
 </project>
