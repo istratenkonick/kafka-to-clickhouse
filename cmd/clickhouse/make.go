@@ -4,17 +4,47 @@ import (
 	"context"
 	"fmt"
 	"github.com/ClickHouse/clickhouse-go/v2"
-	"io/ioutil"
+	"gopkg.in/yaml.v3"
+	"k2c/pkg/abspath"
+	"os"
 	"strings"
+	"time"
 )
 
+type ClickhouseConfig struct {
+	RetryTimeout       time.Duration `yaml:"retryTimeout"`
+	Database           string        `yaml:"database"`
+	Username           string        `yaml:"username"`
+	Password           string        `yaml:"password"`
+	WaitingRemediation time.Duration `yaml:"waitingRemediation"`
+}
+
+type Config struct {
+	Clickhouse ClickhouseConfig `yaml:"clickhouse"`
+}
+
 func main() {
+	absPath := abspath.GetAbsolutePath()
+	yamlFile, err := os.ReadFile(absPath + "config.yaml")
+
+	if err != nil {
+		panic(err)
+	}
+
+	var config Config
+
+	err = yaml.Unmarshal(yamlFile, &config)
+
+	if err != nil {
+		panic(err)
+	}
+
 	conn, err := clickhouse.Open(&clickhouse.Options{
 		Addr: []string{"localhost:9000"},
 		Auth: clickhouse.Auth{
-			Database: "miniOPcore",
-			Username: "",
-			Password: "",
+			Database: config.Clickhouse.Database,
+			Username: config.Clickhouse.Username,
+			Password: config.Clickhouse.Password,
 		},
 	})
 
@@ -24,8 +54,9 @@ func main() {
 	}
 	defer conn.Close()
 
-	filePath := "../../migrations/create_table_logs.sql"
-	sqlBytes, err := ioutil.ReadFile(filePath)
+	filePath := absPath + "migrations/create_table_logs.sql"
+
+	sqlBytes, err := os.ReadFile(filePath)
 
 	if err != nil {
 		fmt.Println("Error reading SQL file:", err)

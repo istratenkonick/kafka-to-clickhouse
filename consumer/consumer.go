@@ -5,13 +5,33 @@ import (
 	"fmt"
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/segmentio/kafka-go"
+	"gopkg.in/yaml.v3"
 	"log"
+	"os"
 	"sync"
 	"time"
 )
 
+type KafkaTopics struct {
+	Main   string `yaml:"main_topic"`
+	Second string `yaml:"second_topic"`
+}
+
+type Topic struct {
+	Names KafkaTopics `yaml:"topics"`
+}
+
 func main() {
-	topics := []string{"my_topic", "my_topic2"}
+	yamlFile, err := os.ReadFile("../config.yaml")
+	if err != nil {
+		panic(err)
+	}
+
+	var topic Topic
+
+	err = yaml.Unmarshal(yamlFile, &topic)
+
+	topics := []string{topic.Names.Main, topic.Names.Second}
 	wg := sync.WaitGroup{}
 	wg.Add(len(topics))
 
@@ -41,7 +61,7 @@ func read(topic string, wg *sync.WaitGroup) {
 		db, err := clickhouse.Open(&clickhouse.Options{
 			Addr: []string{"localhost:9000"},
 			Auth: clickhouse.Auth{
-				Database: "miniOPcore",
+				Database: "k2c",
 				Username: "",
 				Password: "",
 			},
