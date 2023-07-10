@@ -6,29 +6,20 @@ clickhouse:
   username: ""
   # Clickhouse password
   password: ""
-  # Retry connection with Clickhouse after timeout
-  retryTimeout: 5s
   # Default database
   database: "k2c"
-  waitingRemediation: 60s
 kafka:
-    # Kafka configuration
-    # Kafka host
-    host:
-      - "111.64.3.200:9092"
-    # Chunk size for kafka messages
-    chunkSize: 1000
-    # Retry connection with Kafka after timeout
-    timeToFetch: 5s
-    # After how many retries to write data to Clickhouse
-    writeDataAfterFails: 5
-    # Max wait time for kafka messages
-    maxWait: 60s
-    sessionTimeout: 60s
-    timeout: 60s
-    writeTimeout: 60s
-    waitingRemediation: 2s
-    heartbeatInterval: 10s
-topics:
-  main_topic: "my_topic"
-  second_topic: "my_topic2"
+  # Kafka configuration
+  # Kafka host
+  host:
+    - "111.64.3.200:9092"
+core:
+  files:
+    appone:
+      enabled: true
+      topics:
+        - "my_topic"
+    apptwo:
+      enabled: true
+      topics:
+        - "my_topic2"

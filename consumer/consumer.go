@@ -6,20 +6,12 @@ import (
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/segmentio/kafka-go"
 	"gopkg.in/yaml.v3"
+	"k2c/config"
 	"log"
 	"os"
 	"sync"
 	"time"
 )
-
-type KafkaTopics struct {
-	Main   string `yaml:"main_topic"`
-	Second string `yaml:"second_topic"`
-}
-
-type Topic struct {
-	Names KafkaTopics `yaml:"topics"`
-}
 
 func main() {
 	yamlFile, err := os.ReadFile("../config.yaml")
@@ -27,22 +19,23 @@ func main() {
 		panic(err)
 	}
 
-	var topic Topic
+	var cfg *config.Config
 
-	err = yaml.Unmarshal(yamlFile, &topic)
+	err = yaml.Unmarshal(yamlFile, &cfg)
 
-	topics := []string{topic.Names.Main, topic.Names.Second}
 	wg := sync.WaitGroup{}
-	wg.Add(len(topics))
+	wg.Add(2)
 
-	for _, topic := range topics {
-		go read(topic, &wg)
+	for _, topics := range cfg.Core.Files {
+		for _, topic := range topics.Topics {
+			go read(topic, &wg, cfg)
+		}
 	}
 
 	wg.Wait()
 }
 
-func read(topic string, wg *sync.WaitGroup) {
+func read(topic string, wg *sync.WaitGroup, config *config.Config) {
 	defer wg.Done()
 
 	conn, err := kafka.DialLeader(context.Background(), "tcp", "localhost:9092", topic, 0)
@@ -61,9 +54,9 @@ func read(topic string, wg *sync.WaitGroup) {
 		db, err := clickhouse.Open(&clickhouse.Options{
 			Addr: []string{"localhost:9000"},
 			Auth: clickhouse.Auth{
-				Database: "k2c",
-				Username: "",
-				Password: "",
+				Database: config.Clickhouse.Database,
+				Username: config.Clickhouse.Username,
+				Password: config.Clickhouse.Password,
 			},
 		})
 

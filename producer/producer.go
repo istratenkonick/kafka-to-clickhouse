@@ -18,7 +18,7 @@ func main() {
 		context.Background(),
 		"tcp",
 		"localhost:9092",
-		"my_topic",
+		"my_topic2",
 		0)
 
 	if err != nil {
