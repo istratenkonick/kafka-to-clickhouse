@@ -24,10 +24,10 @@ func main() {
 	err = yaml.Unmarshal(yamlFile, &cfg)
 
 	wg := sync.WaitGroup{}
-	wg.Add(2)
 
 	for _, topics := range cfg.Core.Files {
 		for _, topic := range topics.Topics {
+			wg.Add(1)
 			go read(topic, &wg, cfg)
 		}
 	}
@@ -38,43 +38,45 @@ func main() {
 func read(topic string, wg *sync.WaitGroup, config *config.Config) {
 	defer wg.Done()
 
-	conn, err := kafka.DialLeader(context.Background(), "tcp", "localhost:9092", topic, 0)
-	if err != nil {
-		log.Fatal("failed to dial leader:", err)
-	}
+	r := kafka.NewReader(kafka.ReaderConfig{
+		Brokers:   []string{"localhost:9092"},
+		Topic:     topic,
+		Partition: 0,
+		MinBytes:  10e3,
+		MaxBytes:  10e6,
+	})
+	defer r.Close()
 
-	_ = conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	db, err := clickhouse.Open(&clickhouse.Options{
+		Addr: []string{"localhost:9000"},
+		Auth: clickhouse.Auth{
+			Database: config.Clickhouse.Database,
+			Username: config.Clickhouse.Username,
+			Password: config.Clickhouse.Password,
+		},
+	})
+
+	if err != nil {
+		fmt.Println("failed to connect to DB: ", err)
+	}
+	defer db.Close()
 
 	for {
-		n, err := conn.ReadMessage(1e3)
+		m, err := r.ReadMessage(context.Background())
 		if err != nil {
-			break
+			log.Println("failed to read message: ", err)
+			continue
 		}
 
-		db, err := clickhouse.Open(&clickhouse.Options{
-			Addr: []string{"localhost:9000"},
-			Auth: clickhouse.Auth{
-				Database: config.Clickhouse.Database,
-				Username: config.Clickhouse.Username,
-				Password: config.Clickhouse.Password,
-			},
-		})
-
-		if err != nil {
-			fmt.Println("failed to connect to DB: ", err)
-		}
-
-		_ = db.Exec(
+		err = db.Exec(
 			context.Background(),
 			"INSERT INTO logs (name, body, timestamp) VALUES (?, ?, ?)",
 			"log_name",
-			string(n.Value),
-			time.Now().String())
+			string(m.Value),
+			time.Now().Format(time.DateTime))
+		if err != nil {
+			log.Println("failed to insert into DB: ", err)
+			continue
+		}
 	}
-
-	if err := conn.Close(); err != nil {
-		log.Fatal("failed to close connection:", err)
-	}
-
-	fmt.Println("SUCCESS")
 }

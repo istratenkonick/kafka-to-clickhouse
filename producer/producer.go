@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/segmentio/kafka-go"
 	"gopkg.in/yaml.v3"
+	"log"
 	"os"
 	"time"
 )
@@ -14,6 +15,8 @@ type Data struct {
 }
 
 func main() {
+	var info Data
+
 	conn, err := kafka.DialLeader(
 		context.Background(),
 		"tcp",
@@ -22,8 +25,7 @@ func main() {
 		0)
 
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal("failed to dial leader:", err)
 	}
 
 	err = conn.SetDeadline(time.Now().Add(time.Second * 2))
@@ -39,8 +41,6 @@ func main() {
 		return
 	}
 
-	var info Data
-
 	err = yaml.Unmarshal(yamlFile, &info)
 
 	if err != nil {
@@ -50,7 +50,6 @@ func main() {
 
 	_, err = conn.WriteMessages(kafka.Message{Value: []byte(info.Body)})
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal("failed to write messages:", err)
 	}
 }
