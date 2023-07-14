@@ -12,20 +12,9 @@ import (
 )
 
 func main() {
-	var cfg *config.Config
+	var cfg config.Config
 
-	absPath := abspath.GetAbsolutePath()
-	yamlFile, err := os.ReadFile(absPath + "cfg.yaml")
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = yaml.Unmarshal(yamlFile, &cfg)
-
-	if err != nil {
-		panic(err)
-	}
+	filePath := getFilePath(&cfg)
 
 	conn, err := clickhouse.Open(&clickhouse.Options{
 		Addr: []string{"localhost:9000"},
@@ -42,10 +31,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	filePath := absPath + "migrations/create_table_logs.sql"
-
 	sqlBytes, err := os.ReadFile(filePath)
-
 	if err != nil {
 		fmt.Println("Error reading SQL file:", err)
 		return
@@ -68,4 +54,23 @@ func main() {
 	}
 
 	fmt.Println("Table created successfully")
+}
+
+func getFilePath(cfg *config.Config) string {
+	absPath := abspath.GetAbsolutePath()
+	yamlFile, err := os.ReadFile(absPath + "config.yaml")
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = yaml.Unmarshal(yamlFile, &cfg)
+
+	if err != nil {
+		panic(err)
+	}
+
+	filePath := absPath + "migrations/create_table_logs.sql"
+
+	return filePath
 }

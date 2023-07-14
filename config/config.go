@@ -5,13 +5,16 @@ type KafkaConfig struct {
 }
 
 type ClickhouseConfig struct {
-	Database string `yaml:"database"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
+	Database       string `yaml:"database"`
+	Username       string `yaml:"username"`
+	Password       string `yaml:"password"`
+	Authentication bool   `yaml:"auth"`
+	Host           string `yaml:"host"`
 }
 
 type CoreConfig struct {
 	Files map[string]File `yaml:"files"`
+	Host  string          `yaml:"host"`
 }
 
 type Config struct {

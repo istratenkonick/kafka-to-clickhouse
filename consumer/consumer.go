@@ -7,6 +7,7 @@ import (
 	"github.com/segmentio/kafka-go"
 	"gopkg.in/yaml.v3"
 	"k2c/config"
+	"k2c/pkg/abspath"
 	"log"
 	"os"
 	"sync"
@@ -14,7 +15,8 @@ import (
 )
 
 func main() {
-	yamlFile, err := os.ReadFile("../config.yaml")
+	absPath := abspath.GetAbsolutePath()
+	yamlFile, err := os.ReadFile(absPath + "kafka-to-clickhouse/config.yaml")
 	if err != nil {
 		panic(err)
 	}

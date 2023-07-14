@@ -1,13 +1,14 @@
 clickhouse:
   # Clickhouse configuration
   # Clickhouse host
-  host: "111.64.3.200:9000"
+  host: "localhost:9000"
   # Clickhouse username
   username: ""
   # Clickhouse password
   password: ""
   # Default database
   database: "k2c"
+  auth: false
 kafka:
   # Kafka configuration
   # Kafka host
@@ -23,3 +24,4 @@ core:
       enabled: true
       topics:
         - "my_topic2"
+  host: "localhost:9000"

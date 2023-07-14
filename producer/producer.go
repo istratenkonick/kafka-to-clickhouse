@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/segmentio/kafka-go"
 	"gopkg.in/yaml.v3"
+	"k2c/pkg/abspath"
 	"log"
 	"os"
 	"time"
@@ -21,7 +22,7 @@ func main() {
 		context.Background(),
 		"tcp",
 		"localhost:9092",
-		"my_topic2",
+		"my_topic",
 		0)
 
 	if err != nil {
@@ -34,7 +35,8 @@ func main() {
 		return
 	}
 
-	yamlFile, err := os.ReadFile("../data.yaml")
+	absPath := abspath.GetAbsolutePath()
+	yamlFile, err := os.ReadFile(absPath + "kafka-to-clickhouse/data.yaml")
 
 	if err != nil {
 		fmt.Println(err)
